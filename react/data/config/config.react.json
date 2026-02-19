@@ -1,0 +1,13 @@
+{
+    "BASE_PROMPT_PATH" : "data/prompt/react_prompt_base.txt",
+    "TEXT_GENERATION_MODEL" : "Qwen/Qwen3-0.6B",
+    "TEXT_EMBEDDING_MODEL" : "Qwen/Qwen3-Embedding-0.6B",
+    "DEVICE_MAP" : "cpu",
+    "MAX_NEW_TOKENS" : 512,
+    "MAX_ITERATIONS" : 5,
+    "USE_RAG" : true,
+    "MAX_RAG_HITS" : 15,
+    "RAG_SIMILARITY_FUNCTION" : "cosine",
+    "TRACE_LOG_DIR" : "./",
+    "HISTORY_LOG_DIR" : "./"
+}

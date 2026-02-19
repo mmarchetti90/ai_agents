@@ -1,0 +1,19 @@
+{
+    "BASE_TEXT_GENERATION_MODEL" : "Qwen/Qwen3-0.6B",
+    "BASE_TEXT_EMBEDDING_MODEL" : "Qwen/Qwen3-Embedding-0.6B",
+    "TOOLS_SPECIFIC_MODELS" : {
+        "query_decomposition" : "Qwen/Qwen3-0.6B",
+        "task_assigner" : "Qwen/Qwen3-0.6B",
+        "rag_filter" : "Qwen/Qwen3-Embedding-0.6B",
+        "data_summarizer" : "Qwen/Qwen3-0.6B",
+        "code_writer" : "Qwen/Qwen3-0.6B",
+        "creative_writer" : "Qwen/Qwen3-0.6B"
+    },
+    "DEVICE_MAP" : "cpu",
+    "MAX_NEW_TOKENS" : 512,
+    "USE_RAG" : true,
+    "MAX_RAG_HITS" : 10,
+    "RAG_SIMILARITY_FUNCTION" : "cosine",
+    "MAX_TASKS" : 5,
+    "HISTORY_LOG_DIR" : "./"
+}

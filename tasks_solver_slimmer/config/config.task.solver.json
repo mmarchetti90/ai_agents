@@ -1,0 +1,11 @@
+{
+    "TEXT_GENERATION_MODEL" : "Qwen/Qwen3-0.6B",
+    "TEXT_EMBEDDING_MODEL" : "Qwen/Qwen3-Embedding-0.6B",
+    "DEVICE_MAP" : "cpu",
+    "MAX_NEW_TOKENS" : 512,
+    "USE_RAG" : true,
+    "MAX_RAG_HITS" : 10,
+    "RAG_SIMILARITY_FUNCTION" : "cosine",
+    "MAX_TASKS" : 5,
+    "HISTORY_LOG_DIR" : "./"
+}
