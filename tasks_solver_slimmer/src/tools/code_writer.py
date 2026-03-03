@@ -117,10 +117,14 @@ Wrap the code within {self.output_block_tokens[0]} {self.output_block_tokens[1]}
 if __name__ == '__main__':
     
     query = "Write a funtion that returns the sum of a list of numbers."
-    
-    text_generator = code_writer(model_checkpoint='Qwen/Qwen3-0.6B')
 
-    output = text_generator.forward(query)
+    text_generator = code_writer()
+
+    from src.models.generation_model import init_text_generation_model
+    
+    model = init_text_generation_model(model_checkpoint='Qwen/Qwen3-0.6B', device_map='cpu')
+
+    output = text_generator.forward(model=model, query=query)
 
     with open('test_code_writer.txt', 'w') as out:
     

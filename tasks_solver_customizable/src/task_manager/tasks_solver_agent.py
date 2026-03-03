@@ -16,7 +16,7 @@ CONFIG_FILE = 'config/config.task.solver.json'
 
 ### CLASSES AND FUNCTIONS ------------------ ###
 
-def parse_config():
+def parse_config() -> dict:
 
     """
     Parsing config file containing global vars
@@ -140,7 +140,7 @@ class Manager:
 
     ### ------------------------------------ ###
 
-    def log_trace(self, trace_message: str):
+    def log_trace(self, trace_message: str) -> None:
 
         trace_timestamp = datetime.now().strftime("%H:%M:%S")
 
@@ -579,7 +579,7 @@ def run_query(query: str, tasks_list: list[str], config_vars: dict) -> str:
 
     answer = agent.get_answer(query, tasks_list)
 
-    # Garbace collection
+    # Garbage collection
 
     del agent
     gc_collect()

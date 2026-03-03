@@ -1,8 +1,10 @@
-# Toy AI agents
+# AI agents
 
-Collection of Ai agents built for fun.
+Collection of Ai agents built for fun and personal use.
 
 ## Contents
+
+* **projects_summarizer** : tool for creating a summary of projects in a directory.
 
 * **react** : ReAct agent capable of tool selection.
 

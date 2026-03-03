@@ -209,9 +209,13 @@ if __name__ == '__main__':
 
     tools_description = '{\n  \"type\": \"function\",\n  \"name\": \"pubmed_literature_search\",\n  \"description\": \"This is a tool that downloads scientific research abtracts from PubMed and is best used to find up-to-date reseach data\",\n  \"parameters\": {\n    \"query\": {\n      \"type\": \"string\",\n      \"description\": \"String of space-separated keywords\"\n    }\n  }\n}\n\n{\n  \"type\": \"function\",\n  \"name\": \"wikipedia_search\",\n  \"description\": \"This is a tool that downloads extracts from Wikipedia and is best used to retrieve general knowledge about a subject\",\n  \"parameters\": {\n    \"query\": {\n      \"type\": \"string\",\n      \"description\": \"String of space-separated keywords\"\n    }\n  }\n}'
     
-    text_generator = task_assigner(model_checkpoint='Qwen/Qwen3-0.6B')
+    text_generator = task_assigner()
 
-    output = text_generator.forward(query, tools_description)
+    from src.models.generation_model import init_text_generation_model
+    
+    model = init_text_generation_model(model_checkpoint='Qwen/Qwen3-0.6B', device_map='cpu')
+
+    output = text_generator.forward(model=model, query=query)
 
     with open('test_task_assignment.txt', 'w') as out:
     

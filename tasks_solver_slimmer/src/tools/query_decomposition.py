@@ -141,9 +141,13 @@ if __name__ == '__main__':
     
     query = 'Download info about the "Dark Elf Trilogy" series by R. A. Salvatore, then list the books in publication order.'
     
-    text_generator = query_decomposition(model_checkpoint='Qwen/Qwen3-0.6B')
+    text_generator = query_decomposition()
 
-    output = text_generator.forward(query)
+    from src.models.generation_model import init_text_generation_model
+    
+    model = init_text_generation_model(model_checkpoint='Qwen/Qwen3-0.6B', device_map='cpu')
+
+    output = text_generator.forward(model=model, query=query)
 
     with open('test_query_decomposition.txt', 'w') as out:
     

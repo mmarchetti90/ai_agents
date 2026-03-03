@@ -93,9 +93,15 @@ if __name__ == '__main__':
         "Tattoine is a remote planet in the Star Wars universe."
     ]
     
-    text_filter = rag_filter(model_checkpoint='Qwen/Qwen3-Embedding-0.6B')
+    text_filter = rag_filter()
 
-    output = text_filter.forward(query, data, 3)
+    output = text_filter.forward()
+
+    from src.models.generation_model import init_text_generation_model
+    
+    model = init_text_generation_model(model_checkpoint='Qwen/Qwen3-0.6B', device_map='cpu')
+
+    output = text_generator.forward(model=model, query=query, data=data, max_hits=3)
 
     with open('test_rag_filter.txt', 'w') as out:
     

@@ -118,9 +118,13 @@ if __name__ == '__main__':
     
     query = "Tell me a three sentence horror story."
     
-    text_generator = creative_writer(model_checkpoint='Qwen/Qwen3-0.6B')
+    text_generator = creative_writer()
 
-    output = text_generator.forward(query)
+    from src.models.generation_model import init_text_generation_model
+    
+    model = init_text_generation_model(model_checkpoint='Qwen/Qwen3-0.6B', device_map='cpu')
+
+    output = text_generator.forward(model=model, query=query)
 
     with open('test_creative_writer.txt', 'w') as out:
     
