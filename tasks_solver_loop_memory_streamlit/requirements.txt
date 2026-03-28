@@ -1,0 +1,17 @@
+accelerate
+bitsandbytes
+huggingface-hub
+matplotlib
+numpy
+pandas
+requests
+safetensors
+scikit-learn
+scipy
+seaborn
+sentence-transformers
+streamlit
+tokenizers
+torch
+transformers
+typing_extensions

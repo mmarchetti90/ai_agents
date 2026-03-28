@@ -1,0 +1,23 @@
+{
+    "TEXT_GENERATION_MODEL" : "Qwen/Qwen3-0.6B",
+    "TEXT_EMBEDDING_MODEL" : "Qwen/Qwen3-Embedding-0.6B",
+    "DEVICE_MAP" : "cpu",
+    "MEMORY_PATH" : "memory/memory.db",
+    "MAX_MEMORY_SIZE" : 1000,
+    "MAX_NEW_TOKENS" : 512,
+    "MAX_RAG_HITS" : 3,
+    "RAG_SIMILARITY_FUNCTION" : "cosine",
+    "RAG_SIMILARITY_THRESHOLD" : 0.5,
+    "MAX_TOOL_RETRIES" : 5,
+    "PROMPTS" : [
+        "prompts/code_writer.md",
+        "prompts/conversationalist.md",
+        "prompts/creative_writer.md",
+        "prompts/data_miner.md",
+        "prompts/data_summarizer.md",
+        "prompts/final_answer.md",
+        "prompts/key_points_extractor.md",
+        "prompts/query_decomposition.md",
+        "prompts/task_assigner.md"
+    ]
+}
