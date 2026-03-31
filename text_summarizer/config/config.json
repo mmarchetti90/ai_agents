@@ -3,6 +3,8 @@
     "TEXT_EMBEDDING_MODEL" : "Qwen/Qwen3-Embedding-0.6B",
     "DEVICE_MAP" : "cpu",
     "MAX_NEW_TOKENS" : 512,
+    "RAG_SIMILARITY_FUNCTION" : "cosine",
+    "RAG_SIMILARITY_THRESHOLD" : 0.5,
     "MAX_TOOL_RETRIES" : 5,
     "MAX_CLUSTERS" : 25,
     "PROMPTS" : [

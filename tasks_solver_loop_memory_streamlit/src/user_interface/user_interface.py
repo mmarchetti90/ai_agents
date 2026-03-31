@@ -10,8 +10,7 @@ from time import sleep
 from typing import Any
 
 ### CLASSES -------------------------------- ###
-# REWRITE TO RUN EVERYTHING THEN RUNNING AGENT
-# ADD SPINNER
+
 class user_interface:
 
     """

@@ -11,6 +11,7 @@ import sqlite3
 from collections.abc import Callable
 from datetime import datetime
 from docx import Document as DocxReader
+from io import BytesIO
 from matplotlib import pyplot as plt
 from numpy.typing import NDArray
 from os.path import exists
@@ -62,6 +63,7 @@ class pipeline:
         self.llm = llm
         self.text_embedder = text_embedder
         self.max_new_tokens = config['MAX_NEW_TOKENS']
+        self.similarity_threshold = config['RAG_SIMILARITY_THRESHOLD']
         self.max_tool_retries = config['MAX_TOOL_RETRIES']
         self.max_clusters = config['MAX_CLUSTERS']
 
@@ -94,7 +96,7 @@ class pipeline:
         trace_timestamp = datetime.now().strftime("%H:%M:%S")
         timestamped_trace_message = f"[{trace_timestamp}] {trace_message}"
         print(timestamped_trace_message)
-        self.agent_trace.append(timestamped_trace_message.replace('\n', '  \n')) # So the newline will be recognized by st.chat_message
+        self.agent_trace.append(timestamped_trace_message)
 
     ### ------------------------------------ ###
     ### TOOLS MANAGEMENT                     ###
@@ -198,17 +200,17 @@ class pipeline:
         if not exists(input) and all([not input.endswith(suffix) for suffix in supported_files]):
             # Assuming input is the text to summarize
             parsed_input = input.strip()
-        elif input.endswith('.txt'):
+        elif input.lower().endswith('.txt'):
             # txt file
             parsed_input = open(input, 'r').read().strip()
-        elif input.endswith('.pdf'):
+        elif input.lower().endswith('.pdf'):
             # pdf file
             parsed_input = []
             reader = PdfReader(input)
             for page in reader.pages:
                 parsed_input.append(page.extract_text())
             parsed_input = '\n'.join(parsed_input)
-        elif input.endswith('.docx'):
+        elif input.lower().endswith('.docx'):
             # Windows docx file
             parsed_input = []
             reader = DocxReader(input)
@@ -233,7 +235,7 @@ class pipeline:
         """
         Query-processing workflow:
             1. Text is imported and split into sentences
-            2. Each sentece is encoded and similarity scores
+            2. Each sentece is enbedded and similarity scores
             3. Sentences are clustered
             4. Each cluster is summarized and keywords are extracted
 
@@ -257,18 +259,21 @@ class pipeline:
         self.log_trace(trace_message='Initializing sentences db')
         self.init_db()
 
-        # Subset sentences, encode them, and store in database
+        # Subset sentences, embed them, and store in database
         self.log_trace(trace_message='Parsing sentences')
         for i in range(0, len(sentences), 100):
             text_sub = sentences[i:i+100]
-            new_encodings = self.encode_text(text_sub)
-            all_encodings = new_encodings if i == 0 else np.concatenate([all_encodings, new_encodings], axis=0)
-            self.log_sentences(text_sub)
+            new_embeddings = self.embed_text(text_sub)
+            all_embeddings = new_embeddings if i == 0 else np.concatenate([all_embeddings, new_embeddings], axis=0)
+            self.log_data(table='sentences', column='content', data=text_sub, previous_count=i)
+            new_embeddings = [self.numpy_to_blob(ne) for ne in new_embeddings] # For sqlite logging
+            self.log_data(table='embeddings', column='embedding', data=new_embeddings, previous_count=i)
         
         # KMeans clustering
         self.log_trace(trace_message='Clustering')
-        clusters = self.cluster_sentences(all_encodings)
-        self.log_clusters(clusters)
+        clusters = self.cluster_sentences(all_embeddings)
+        clusters = [int(cl) for cl in clusters] # For sqlite logging
+        self.log_data(table='clusters', column='cluster', data=clusters, previous_count=0)
 
         # Plot clusters distribution
         self.log_trace(trace_message='Plotting clusters distribution')
@@ -301,6 +306,7 @@ class pipeline:
         
         # Create tables
         db_cur.execute('CREATE TABLE sentences(sentence_id INTEGER, content TEXT)')
+        db_cur.execute('CREATE TABLE embeddings(sentence_id INTEGER, embedding BLOB)')
         db_cur.execute('CREATE TABLE clusters(sentence_id INTEGER, cluster INTEGER)')
         
         # Commit transactions
@@ -312,33 +318,11 @@ class pipeline:
 
     ### ------------------------------------ ###
 
-    def log_sentences(self, sentences: list[str], previous_count: int=0) -> None:
+    def log_data(self, table: str, column: str, data: Any, previous_count: int=0) -> None:
 
         """
-        Function to log sentences to a local database
-        """
-
-        # Open connection and create cursor for main table
-        db_con = sqlite3.connect(self.db_name)
-        db_cur = db_con.cursor()
-
-        # Add sentences
-        insert_statement = 'INSERT INTO sentences (sentence_id, content) VALUES (?, ?)'
-        new_data = [(sn+previous_count, s) for sn,s in enumerate(sentences)]
-        db_cur.executemany(insert_statement, new_data)
-
-        # Commit transactions
-        db_con.commit()
-        
-        # Close connection
-        db_con.close()
-    
-    ### ------------------------------------ ###
-
-    def log_clusters(self, clusters: NDArray):
-
-        """
-        Adds clusters to sentences database
+        Function to log data to a local database
+        Assumes the table also has a sentence_id field
         """
 
         # Open connection and create cursor for main table
@@ -346,8 +330,8 @@ class pipeline:
         db_cur = db_con.cursor()
 
         # Add sentences
-        insert_statement = 'INSERT INTO clusters (sentence_id, cluster) VALUES (?, ?)'
-        new_data = [(cln, int(cl)) for cln,cl in enumerate(clusters)]
+        insert_statement = f'INSERT INTO {table} (sentence_id, {column}) VALUES (?, ?)'
+        new_data = [(dn+previous_count, d) for dn,d in enumerate(data)]
         db_cur.executemany(insert_statement, new_data)
 
         # Commit transactions
@@ -357,19 +341,48 @@ class pipeline:
         db_con.close()
 
     ### ------------------------------------ ###
-    ### TEXT ENCODING                        ###
+
+    @staticmethod
+    def numpy_to_blob(array: NDArray) -> bytes:
+
+        """
+        Converts a numpy array to a binary blob
+        """
+        
+        blob = BytesIO()
+        np.save(blob, array)
+        blob.seek(0)
+        
+        return sqlite3.Binary(blob.read())
+
     ### ------------------------------------ ###
 
-    def encode_text(self, text: list[str]) -> NDArray:
+    @staticmethod
+    def blob_to_numpy(blob: bytes) -> NDArray:
+        
+        """
+        Converts a binary blob to a numpy array
+        """
+        
+        array = BytesIO(blob)
+        array.seek(0)
+        
+        return np.load(array)
+
+    ### ------------------------------------ ###
+    ### TEXT EMBEDDING                       ###
+    ### ------------------------------------ ###
+
+    def embed_text(self, text: list[str]) -> NDArray:
 
         """
-        Function to encode text
+        Function to embed text
         """
 
-        encoding = self.text_embedder.transform(text)
-        encoding = np.array(encoding)
+        embeddings = self.text_embedder.transform(text)
+        embeddings = np.array(embeddings)
 
-        return encoding
+        return embeddings
     
     ### ------------------------------------ ###
     ### TEXT CLUSTERING                      ###
@@ -395,7 +408,9 @@ class pipeline:
         clustering_tests = pd.DataFrame(clustering_tests, columns=['k', 'inertia', 'silhouette'])
 
         # Define optimal k
-        optimal_k = clustering_tests['k'].values[np.argmax(clustering_tests['silhouette'])]
+        optimal_k_inertia =  clustering_tests['k'].values[self.kneedle(clustering_tests['inertia'], False)[0]]
+        optimal_k_silhouette = clustering_tests['k'].values[np.argmax(clustering_tests['silhouette'])]
+        optimal_k = max([optimal_k_inertia, optimal_k_silhouette])
 
         # Plotting clustering stats
         fig, axes = plt.subplots(2, 1, sharex=True, figsize=(10, 8))
@@ -411,9 +426,39 @@ class pipeline:
         kmeans.fit(embeddings)
         cluster_labels = kmeans.labels_
 
-        self.log_trace(trace_message=f'    \u2714 Clustering completed. Found {optimal_k} clusters')
+        self.log_trace(trace_message=f'  \u2714 Clustering completed. Found {optimal_k} clusters')
+        for cl in np.unique(np.sort(cluster_labels)):
+            self.log_trace(trace_message=f'    * CL{cl} : {(cluster_labels == cl).sum()} sentences')
 
         return cluster_labels
+
+    ### ------------------------------------ ###
+
+    @staticmethod
+    def kneedle(vector, sort_vector=True):
+        
+        """
+        Kneedle to find threshold cutoff.
+        """
+        
+        # Sort vector
+        if sort_vector:
+            vector = np.sort(vector)[::-1]
+        
+        # Find gradient and intercept
+        x0, x1 = 0, len(vector)
+        y0, y1 = max(vector), min(vector)
+        gradient = (y1 - y0) / (x1 - x0)
+        intercept = y0
+        
+        # Compute difference vector
+        difference_vector = [(gradient * x + intercept) - y for x,y in enumerate(vector)]
+        
+        # Find max of difference_vector and define cutoff
+        cutoff_index = difference_vector.index(max(difference_vector))
+        cutoff_value = vector[cutoff_index]
+        
+        return cutoff_index, cutoff_value
 
     ### ------------------------------------ ###
 
@@ -510,15 +555,34 @@ class pipeline:
             select_statement = f"""
             SELECT 
                 sen.content,
-                cl.cluster
+                emb.embedding
             FROM
                 sentences AS sen
             JOIN
                 clusters AS cl ON sen.sentence_id = cl.sentence_id
+            JOIN
+                embeddings AS emb ON sen.sentence_id = emb.sentence_id
             WHERE
                 cl.cluster = {cl}
             """
-            cl_sentences = np.array(db_cur.execute(select_statement).fetchall()).ravel()
+            cl_data = db_cur.execute(select_statement).fetchall()
+            if not len(cl_data):
+                continue
+            cl_sentences = np.array([cd[0] for cd in cl_data])
+            cl_embeddings = np.stack([self.blob_to_numpy(cd[1]) for cd in cl_data], axis=0)
+            
+            # Filter based on similarity to embeddings centroid
+            cl_embeddings_centroid = cl_embeddings.mean(axis=0)
+            cl_embeddings_centroid = cl_embeddings_centroid.reshape((1, cl_embeddings_centroid.shape[0]))
+            similarity = self.text_embedder.compare(
+                query_embedding=cl_embeddings_centroid,
+                data_embedding=cl_embeddings,
+                max_hits=cl_embeddings.shape[0],
+                score_threshold=self.similarity_threshold
+            )[0]
+            good_sentences_idx = [s[0] for s in similarity]
+            cl_sentences = cl_sentences[good_sentences_idx]
+            self.log_trace(trace_message=f'    \u2714 Found {len(cl_sentences)} sentences')
             cl_sentences = '\n'.join(cl_sentences)
             
             # Summarize

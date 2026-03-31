@@ -134,7 +134,7 @@ class embedder:
         data_embedding: NDArray,
         max_hits: int=5,
         score_threshold: float=0.75
-    ) -> dict[int, list[tuple[int, int]]]:
+    ) -> dict[int, list[tuple[int, float]]]:
 
         """
         Compares data to a query and returns the index of the top most similar items
@@ -143,7 +143,7 @@ class embedder:
         ----------
         query_embedding: np.array
             Transformed query
-        data_embedding: list[str]
+        data_embedding: np.array
             Transformed data
         max_hits: int=5
             Maximum hits to be returned
@@ -152,8 +152,8 @@ class embedder:
 
         Returns
         -------
-        list[str]
-            List of top hits indices
+        dict[int, list[tuple[int, float]]]
+            Dict of top hits indices and similarity scores
         """
 
         # Compute similarity of data to query

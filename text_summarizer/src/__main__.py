@@ -40,6 +40,31 @@ def parse_config() -> dict:
 
     return config_data
 
+### --------------------------------------- ###
+
+@st.cache_resource
+def load_pipeline(config_data: dict) -> Any:
+
+    # Init models
+    llm_instance = llm(
+        model_checkpoint=config_data['TEXT_GENERATION_MODEL'],
+        device_map=config_data['DEVICE_MAP']
+    )
+    embedder_instance = embedder(
+        model_checkpoint=config_data['TEXT_EMBEDDING_MODEL'],
+        device_map=config_data['DEVICE_MAP'],
+        similarity_fn_name=config_data['RAG_SIMILARITY_FUNCTION']
+    )
+
+    # Init LLM agent
+    pipeline_instance = pipeline(
+        config=config_data,
+        llm=llm_instance,
+        text_embedder=embedder_instance
+    )
+
+    return pipeline_instance
+
 ### ---------------------------------------- ###
 
 def run_agent(agent: Any) -> None:
@@ -67,30 +92,6 @@ def terminate() -> None:
     gc_collect()
     sys_exit()
 
-### --------------------------------------- ###
-
-@st.cache_resource
-def load_pipeline(config_data: dict) -> Any:
-
-    # Init models
-    llm_instance = llm(
-        model_checkpoint=config_data['TEXT_GENERATION_MODEL'],
-        device_map=config_data['DEVICE_MAP']
-    )
-    embedder_instance = embedder(
-        model_checkpoint=config_data['TEXT_EMBEDDING_MODEL'],
-        device_map=config_data['DEVICE_MAP']
-    )
-
-    # Init LLM agent
-    pipeline_instance = pipeline(
-        config=config_data,
-        llm=llm_instance,
-        text_embedder=embedder_instance
-    )
-
-    return pipeline_instance
-
 ### MAIN ---------------------------------- ###
 
 if __name__ == '__main__':
@@ -117,7 +118,10 @@ if __name__ == '__main__':
     if st.session_state.new_query in ['quit', 'exit', 'terminate', 'kill']:
         terminate()
     else:
-        run_agent(agent=pipeline_instance)
+        try:
+            run_agent(agent=pipeline_instance)
+        except Exception as error:
+            st.session_state.summary_report = f'ERROR:\n{error}'
         
     # Wide layout
     st.set_page_config(layout="wide")
@@ -151,7 +155,7 @@ if __name__ == '__main__':
     # Populate left_container_sub_2
     for at in st.session_state.agent_trace:
         with left_container_sub_2.chat_message('ai'):
-            st.write(at)
+            st.text(at)
 
     # right_col structure
     text_tab, plot_1_tab, plot_2_tab = right_col.tabs(['Summary', 'Clustering stats', 'Clusters'])
