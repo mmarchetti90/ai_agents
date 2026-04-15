@@ -1,12 +1,15 @@
 # AI agents
 
-Collection of Ai agents built for fun and personal use.
+Collection of AI agents built for fun and personal use.\
+None of these were built with AI :satisfied:
 
 ## Contents
 
 * **projects_summarizer** : tool for creating a summary of projects in a directory.
 
 * **react** : ReAct agent capable of tool selection.
+
+* **react_skills_codingagent** : ReAct coding agent with skills calling.
 
 * **tasks_solver_customizable** : agent capable of decomposing a query into subtasks, then selecting tools (functions or LLMs) for each task.
 

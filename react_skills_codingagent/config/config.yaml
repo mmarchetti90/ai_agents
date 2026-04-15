@@ -1,0 +1,19 @@
+agent:
+  max_iterations: 3
+  max_useful_chat_messages: 10 # Number of most recent/relevant messages to include as short-term memory
+
+model:
+  checkpoint: "Qwen/Qwen3-0.6B"
+  device_map: "cpu"
+  max_new_tokens: 512
+  no_think_mode: true
+
+skills:
+  skills_dir: "src/skills"
+
+memory:
+  memory_path: "memory/memory.db"
+  checkpoint: "Qwen/Qwen3-Embedding-0.6B"
+  device_map: "cpu"
+  similarity_fn_name: "cosine"
+  score_threshold: 0.25
