@@ -57,9 +57,7 @@ class CodingAgent:
         # Init agent memory
         self.memory = MemoryHandler(
             config['memory']['memory_path'],
-            config['memory']['checkpoint'],
-            config['memory']['device_map'],
-            config['memory']['similarity_fn_name']
+            config['memory']['checkpoint']
         )
         self.memory_score_threshold = config['memory']['score_threshold']
         self.log_trace(trace_message='Added memory')
