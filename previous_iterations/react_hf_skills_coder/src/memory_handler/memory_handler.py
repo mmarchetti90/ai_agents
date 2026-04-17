@@ -278,7 +278,7 @@ class MemoryHandler:
 
     ### ------------------------------------ ###
 
-    def retrieve_memory(self, context: list[str], max_hits: int=5, score_threshold: float=0.75) -> NDArray:
+    def retrieve_memory(self, context: list[str], origin: list[str]=['assistant'], max_hits: int=5, score_threshold: float=0.75) -> list:
 
         """
         Function to retrieve past user-ai interactions from a local database
@@ -288,9 +288,12 @@ class MemoryHandler:
         db_con = sqlite3.connect(self.memory_path)
         db_cur = db_con.cursor()
 
+        # Define WHERE statement based on number of permitted origins
+        where_statement = 'WHERE origin ' + ('= ?' if len(origin) == 1 else 'IN (' + ', '.join(['?'] * len(origin)) + ')')
+
         # Retrieve encodings
-        select_statement = 'SELECT encoding FROM ai_user_interactions WHERE origin = ?'
-        memory_encodings = [self.blob_to_numpy(e[0]) for e in db_cur.execute(select_statement, ('agent',)).fetchall()]
+        select_statement = f'SELECT encoding FROM ai_user_interactions {where_statement}'
+        memory_encodings = [self.blob_to_numpy(e[0]) for e in db_cur.execute(select_statement, origin).fetchall()]
         if not len(memory_encodings):
             return []
         memory_encodings = np.stack(memory_encodings, axis=0)
@@ -304,8 +307,8 @@ class MemoryHandler:
 
         # Retrieve content of memories
         if top_hits_idx.shape[0] > 0:
-            select_statement = "SELECT content FROM ai_user_interactions WHERE origin = ?"
-            memory_contents = db_cur.execute(select_statement, ('agent',)).fetchall()
+            select_statement = f'SELECT content FROM ai_user_interactions {where_statement}'
+            memory_contents = db_cur.execute(select_statement, origin).fetchall()
             relevant_memories = np.array(memory_contents).ravel()[top_hits_idx].tolist()
         else:
             relevant_memories = []
