@@ -50,8 +50,10 @@ Plan the structure of a coding project based on the user's description
 - Assume the project files will all be created in the current directory
 - Think about what the project aims to achieve
 - Break down the code into discreet code snippets to achieve specific goals
+- You don't have to follow the example exactly, be creative
+- Limit yourself to generate the overall structure, do not generate individual code snippets
 
-Here's an example of a project structure:
+Here's an example of project structure:
 ./
 ├── README.md
 │   Description of the project and how to run it.
@@ -74,4 +76,7 @@ Here's an example of a project structure:
 
 ## Completion message
 
-I generated a structure of the proposed project.
+Here is the structure I generated for the proposed project:
+```
+<previous_output>
+```
