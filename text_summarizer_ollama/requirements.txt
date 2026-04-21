@@ -1,0 +1,12 @@
+matplotlib
+numpy
+ollama
+pandas
+pypdf
+python-docx
+requests
+scikit-learn
+scipy
+seaborn
+streamlit
+typing_extensions

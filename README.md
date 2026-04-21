@@ -17,6 +17,16 @@ Streamlit interface.\
 Works on short text and scientific papers alike.\
 Uses HF transformers.
 
+* **text_summarizer_ollama**:\
+Same as above, but using Ollama.
+
+### RAG
+
+* **rag_knowledge_parser**:\
+Agent that parses documents in the `knowledge_base` directory and uses them to answer user queries.\
+Location of knowledge base directory can be overridden via CLI.\
+Uses Ollama for inference with larger quantized models.
+
 ### Task solvers
 
 * **tasks_solver_customizable**:\

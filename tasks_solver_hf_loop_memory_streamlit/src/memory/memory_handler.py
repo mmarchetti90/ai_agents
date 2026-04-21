@@ -143,7 +143,7 @@ class memory_handler:
 
             # Remove old memories
             delete_query = 'DELETE FROM ai_user_interactions WHERE timestamp <= ?'
-            db_con.execute(delete_query, (threshold,))
+            db_cur.execute(delete_query, (threshold,))
 
             # Commit transactions
             db_con.commit()

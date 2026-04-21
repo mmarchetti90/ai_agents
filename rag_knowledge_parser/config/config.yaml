@@ -1,0 +1,14 @@
+agent:
+  save_session_trace: false
+
+llm:
+  checkpoint: "qwen3.5:4b"
+  context_window: 2048
+  max_new_tokens: 1024
+  think_mode: true
+
+knowledge:
+  knowledge_dir: "knowledge_base"
+  checkpoint: "qwen3-embedding:0.6b"
+  max_retrieved_info: 100
+  score_threshold: 0.25
